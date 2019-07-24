@@ -1,4 +1,4 @@
-const Base = require('./base.js');
+const Base = require("./base.js");
 
 module.exports = class extends Base {
   /**
@@ -6,13 +6,24 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
   async listAction() {
-    const addressList = await this.model('address').where({user_id: this.getLoginUserId()}).select();
+    const addressList = await this.model("address")
+      .where({ user_id: this.getLoginUserId() })
+      .select();
     let itemKey = 0;
     for (const addressItem of addressList) {
-      addressList[itemKey].province_name = await this.model('region').getRegionName(addressItem.province_id);
-      addressList[itemKey].city_name = await this.model('region').getRegionName(addressItem.city_id);
-      addressList[itemKey].district_name = await this.model('region').getRegionName(addressItem.district_id);
-      addressList[itemKey].full_region = addressList[itemKey].province_name + addressList[itemKey].city_name + addressList[itemKey].district_name;
+      addressList[itemKey].province_name = await this.model(
+        "region"
+      ).getRegionName(addressItem.province_id);
+      addressList[itemKey].city_name = await this.model("region").getRegionName(
+        addressItem.city_id
+      );
+      addressList[itemKey].district_name = await this.model(
+        "region"
+      ).getRegionName(addressItem.district_id);
+      addressList[itemKey].full_region =
+        addressList[itemKey].province_name +
+        addressList[itemKey].city_name +
+        addressList[itemKey].district_name;
       itemKey += 1;
     }
 
@@ -24,14 +35,25 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
   async detailAction() {
-    const addressId = this.get('id');
+    const addressId = this.get("id");
 
-    const addressInfo = await this.model('address').where({user_id: this.getLoginUserId(), id: addressId}).find();
+    const addressInfo = await this.model("address")
+      .where({ user_id: this.getLoginUserId(), id: addressId })
+      .find();
     if (!think.isEmpty(addressInfo)) {
-      addressInfo.province_name = await this.model('region').getRegionName(addressInfo.province_id);
-      addressInfo.city_name = await this.model('region').getRegionName(addressInfo.city_id);
-      addressInfo.district_name = await this.model('region').getRegionName(addressInfo.district_id);
-      addressInfo.full_region = addressInfo.province_name + addressInfo.city_name + addressInfo.district_name;
+      addressInfo.province_name = await this.model("region").getRegionName(
+        addressInfo.province_id
+      );
+      addressInfo.city_name = await this.model("region").getRegionName(
+        addressInfo.city_id
+      );
+      addressInfo.district_name = await this.model("region").getRegionName(
+        addressInfo.district_id
+      );
+      addressInfo.full_region =
+        addressInfo.province_name +
+        addressInfo.city_name +
+        addressInfo.district_name;
     }
 
     return this.success(addressInfo);
@@ -42,32 +64,39 @@ module.exports = class extends Base {
    * @returns {Promise.<Promise|PreventPromise|void>}
    */
   async saveAction() {
-    let addressId = this.post('id');
+    let addressId = this.post("id");
 
     const addressData = {
-      name: this.post('name'),
-      mobile: this.post('mobile'),
-      province_id: this.post('province_id'),
-      city_id: this.post('city_id'),
-      district_id: this.post('district_id'),
-      address: this.post('address'),
+      name: this.post("name"),
+      mobile: this.post("mobile"),
+      province_id: this.post("province_id"),
+      city_id: this.post("city_id"),
+      district_id: this.post("district_id"),
+      address: this.post("address"),
       user_id: this.getLoginUserId(),
-      is_default: this.post('is_default') === true ? 1 : 0
+      is_default: this.post("is_default") === true ? 1 : 0,
+      country_id: 0
     };
 
     if (think.isEmpty(addressId)) {
-      addressId = await this.model('address').add(addressData);
+      addressId = await this.model("address").add(addressData);
     } else {
-      await this.model('address').where({id: addressId, user_id: this.getLoginUserId()}).update(addressData);
+      await this.model("address")
+        .where({ id: addressId, user_id: this.getLoginUserId() })
+        .update(addressData);
     }
 
     // 如果设置为默认，则取消其它的默认
-    if (this.post('is_default') === true) {
-      await this.model('address').where({id: ['<>', addressId], user_id: this.getLoginUserId()}).update({
-        is_default: 0
-      });
+    if (this.post("is_default") === true) {
+      await this.model("address")
+        .where({ id: ["<>", addressId], user_id: this.getLoginUserId() })
+        .update({
+          is_default: 0
+        });
     }
-    const addressInfo = await this.model('address').where({id: addressId}).find();
+    const addressInfo = await this.model("address")
+      .where({ id: addressId })
+      .find();
 
     return this.success(addressInfo);
   }
@@ -77,10 +106,12 @@ module.exports = class extends Base {
    * @returns {Promise.<Promise|PreventPromise|void>}
    */
   async deleteAction() {
-    const addressId = this.post('id');
+    const addressId = this.post("id");
 
-    await this.model('address').where({id: addressId, user_id: this.getLoginUserId()}).delete();
+    await this.model("address")
+      .where({ id: addressId, user_id: this.getLoginUserId() })
+      .delete();
 
-    return this.success('删除成功');
+    return this.success("删除成功");
   }
 };

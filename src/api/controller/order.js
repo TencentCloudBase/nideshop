@@ -1,5 +1,5 @@
-const Base = require('./base.js');
-const moment = require('moment');
+const Base = require("./base.js");
+const moment = require("moment");
 
 module.exports = class extends Base {
   /**
@@ -7,21 +7,30 @@ module.exports = class extends Base {
    * @return {Promise} []
    */
   async listAction() {
-    const orderList = await this.model('order').where({ user_id: this.getLoginUserId() }).page(1, 10).countSelect();
+    const orderList = await this.model("order")
+      .where({ user_id: this.getLoginUserId() })
+      .page(1, 10)
+      .countSelect();
     const newOrderList = [];
     for (const item of orderList.data) {
       // 订单的商品
-      item.goodsList = await this.model('order_goods').where({ order_id: item.id }).select();
+      item.goodsList = await this.model("order_goods")
+        .where({ order_id: item.id })
+        .select();
       item.goodsCount = 0;
       item.goodsList.forEach(v => {
         item.goodsCount += v.number;
       });
 
       // 订单状态的处理
-      item.order_status_text = await this.model('order').getOrderStatusText(item.id);
+      item.order_status_text = await this.model("order").getOrderStatusText(
+        item.id
+      );
 
       // 可操作的选项
-      item.handleOption = await this.model('order').getOrderHandleOption(item.id);
+      item.handleOption = await this.model("order").getOrderHandleOption(
+        item.id
+      );
 
       newOrderList.push(item);
     }
@@ -31,38 +40,57 @@ module.exports = class extends Base {
   }
 
   async detailAction() {
-    const orderId = this.get('orderId');
-    const orderInfo = await this.model('order').where({ user_id: this.getLoginUserId(), id: orderId }).find();
+    const orderId = this.get("orderId");
+    const orderInfo = await this.model("order")
+      .where({ user_id: this.getLoginUserId(), id: orderId })
+      .find();
 
     if (think.isEmpty(orderInfo)) {
-      return this.fail('订单不存在');
+      return this.fail("订单不存在");
     }
 
-    orderInfo.province_name = await this.model('region').where({ id: orderInfo.province }).getField('name', true);
-    orderInfo.city_name = await this.model('region').where({ id: orderInfo.city }).getField('name', true);
-    orderInfo.district_name = await this.model('region').where({ id: orderInfo.district }).getField('name', true);
-    orderInfo.full_region = orderInfo.province_name + orderInfo.city_name + orderInfo.district_name;
+    orderInfo.province_name = await this.model("region")
+      .where({ id: orderInfo.province })
+      .getField("name", true);
+    orderInfo.city_name = await this.model("region")
+      .where({ id: orderInfo.city })
+      .getField("name", true);
+    orderInfo.district_name = await this.model("region")
+      .where({ id: orderInfo.district })
+      .getField("name", true);
+    orderInfo.full_region =
+      orderInfo.province_name + orderInfo.city_name + orderInfo.district_name;
 
-    const latestExpressInfo = await this.model('order_express').getLatestOrderExpress(orderId);
+    const latestExpressInfo = await this.model(
+      "order_express"
+    ).getLatestOrderExpress(orderId);
     orderInfo.express = latestExpressInfo;
 
-    const orderGoods = await this.model('order_goods').where({ order_id: orderId }).select();
+    const orderGoods = await this.model("order_goods")
+      .where({ order_id: orderId })
+      .select();
 
     // 订单状态的处理
-    orderInfo.order_status_text = await this.model('order').getOrderStatusText(orderId);
-    orderInfo.add_time = moment.unix(orderInfo.add_time).format('YYYY-MM-DD HH:mm:ss');
-    orderInfo.final_pay_time = moment('001234', 'Hmmss').format('mm:ss');
+    orderInfo.order_status_text = await this.model("order").getOrderStatusText(
+      orderId
+    );
+    orderInfo.add_time = moment
+      .unix(orderInfo.add_time)
+      .format("YYYY-MM-DD HH:mm:ss");
+    orderInfo.final_pay_time = moment("001234", "Hmmss").format("mm:ss");
     // 订单最后支付时间
     if (orderInfo.order_status === 0) {
       // if (moment().subtract(60, 'minutes') < moment(orderInfo.add_time)) {
-      orderInfo.final_pay_time = moment('001234', 'Hmmss').format('mm:ss');
+      orderInfo.final_pay_time = moment("001234", "Hmmss").format("mm:ss");
       // } else {
       //     //超过时间不支付，更新订单状态为取消
       // }
     }
 
     // 订单可操作的选择,删除，支付，收货，评论，退换货
-    const handleOption = await this.model('order').getOrderHandleOption(orderId);
+    const handleOption = await this.model("order").getOrderHandleOption(
+      orderId
+    );
 
     return this.success({
       orderInfo: orderInfo,
@@ -77,39 +105,42 @@ module.exports = class extends Base {
    */
   async submitAction() {
     // 获取收货地址信息和计算运费
-    const addressId = this.post('addressId');
-    const checkedAddress = await this.model('address').where({ id: addressId }).find();
+    const addressId = this.post("addressId");
+    const checkedAddress = await this.model("address")
+      .where({ id: addressId })
+      .find();
     if (think.isEmpty(checkedAddress)) {
-      return this.fail('请选择收货地址');
+      return this.fail("请选择收货地址");
     }
-    const freightPrice = 0.00;
+    const freightPrice = 0.0;
 
     // 获取要购买的商品
-    const checkedGoodsList = await this.model('cart').where({ user_id: this.getLoginUserId(), session_id: 1, checked: 1 }).select();
+    const checkedGoodsList = await this.model("cart")
+      .where({ user_id: this.getLoginUserId(), session_id: 1, checked: 1 })
+      .select();
     if (think.isEmpty(checkedGoodsList)) {
-      return this.fail('请选择商品');
+      return this.fail("请选择商品");
     }
 
     // 统计商品总价
-    let goodsTotalPrice = 0.00;
+    let goodsTotalPrice = 0.0;
     for (const cartItem of checkedGoodsList) {
       goodsTotalPrice += cartItem.number * cartItem.retail_price;
     }
 
     // 获取订单使用的优惠券
-    const couponId = this.post('couponId');
-    const couponPrice = 0.00;
+    const couponId = this.post("couponId");
+    const couponPrice = 0.0;
     if (!think.isEmpty(couponId)) {
-
     }
 
     // 订单价格计算
     const orderTotalPrice = goodsTotalPrice + freightPrice - couponPrice; // 订单的总价
-    const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额
+    const actualPrice = orderTotalPrice - 0.0; // 减去其它支付的金额后，要实际支付的金额
     const currentTime = parseInt(this.getTime() / 1000);
 
     const orderInfo = {
-      order_sn: this.model('order').generateOrderNumber(),
+      order_sn: this.model("order").generateOrderNumber(),
       user_id: this.getLoginUserId(),
 
       // 收货地址和运费
@@ -119,10 +150,10 @@ module.exports = class extends Base {
       city: checkedAddress.city_id,
       district: checkedAddress.district_id,
       address: checkedAddress.address,
-      freight_price: 0.00,
+      freight_price: 0.0,
 
       // 留言
-      postscript: this.post('postscript'),
+      postscript: this.post("postscript"),
 
       // 使用的优惠券
       coupon_id: 0,
@@ -131,14 +162,25 @@ module.exports = class extends Base {
       add_time: currentTime,
       goods_price: goodsTotalPrice,
       order_price: orderTotalPrice,
-      actual_price: actualPrice
+      actual_price: actualPrice,
+
+      // 默认参数
+      order_status: 0,
+      shipping_status: 0,
+      pay_status: 0,
+      country: 0,
+      pay_id: 0,
+      integral: 0,
+      confirm_time: 0,
+      pay_time: 0,
+      parent_id: 0
     };
 
     // 开启事务，插入订单信息和订单商品
-    const orderId = await this.model('order').add(orderInfo);
+    const orderId = await this.model("order").add(orderInfo);
     orderInfo.id = orderId;
     if (!orderId) {
-      return this.fail('订单提交失败');
+      return this.fail("订单提交失败");
     }
 
     // 统计商品总价
@@ -155,12 +197,14 @@ module.exports = class extends Base {
         retail_price: goodsItem.retail_price,
         number: goodsItem.number,
         goods_specifition_name_value: goodsItem.goods_specifition_name_value,
-        goods_specifition_ids: goodsItem.goods_specifition_ids
+        goods_specifition_ids: goodsItem.goods_specifition_ids,
+        // 默认参数
+        is_real: 0
       });
     }
 
-    await this.model('order_goods').addMany(orderGoodsData);
-    await this.model('cart').clearBuyGoods(this.getLoginUserId());
+    await this.model("order_goods").addMany(orderGoodsData);
+    await this.model("cart").clearBuyGoods(this.getLoginUserId());
 
     return this.success({ orderInfo: orderInfo });
   }
@@ -170,11 +214,13 @@ module.exports = class extends Base {
    * @returns {Promise.<void>}
    */
   async expressAction() {
-    const orderId = this.get('orderId');
+    const orderId = this.get("orderId");
     if (think.isEmpty(orderId)) {
-      return this.fail('订单不存在');
+      return this.fail("订单不存在");
     }
-    const latestExpressInfo = await this.model('order_express').getLatestOrderExpress(orderId);
+    const latestExpressInfo = await this.model(
+      "order_express"
+    ).getLatestOrderExpress(orderId);
     return this.success(latestExpressInfo);
   }
 };
