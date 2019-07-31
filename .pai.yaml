@@ -1,0 +1,9 @@
+deployScripts:
+  start:
+    - npm install
+    - pm2 start ./pm2.json
+  stop:
+    - pm2 stop nideshop
+  restart:
+    - npm install
+    - pm2 restart nideshop

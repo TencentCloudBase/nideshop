@@ -6,8 +6,6 @@ module.exports = class extends Base {
     const fullUserInfo = this.post("userInfo");
     const clientIp = this.ctx.ip;
 
-    debugger;
-
     // 解释用户数据
     const userInfo = await this.service("weixin", "api").login(
       code,
