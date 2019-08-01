@@ -40,7 +40,12 @@ npm start
 访问http://127.0.0.1:8360/
 
 ### 线上部署
-[在阿里云（CentOS 7）上部署](https://www.nideshop.com/documents/nideshop-manual/deployment-centos)
+
+#### 在小程序云服务器上部署
+推荐选用[腾讯云 · 小程序云服务器（PAI实例）](https://cloud.tencent.com/solution/pai)部署服务，PAI 实例默认域名，5分钟快速搭建基于WebSocket的实时高效通讯服务，同时提供云开发调用支持，为小程序开发提供更加便捷的云服务器解决方案。
+
+购买实例后将获得默认提供的三级子域名，并自动配置了解析与ssl证书，访问 `xxx.pai.tcloudbase.com:5523/deploy` 填入git仓库地址即可一键部署服务到服务器，并可以实现简单的服务管控。
+![在小程序云服务器上部署](https://main.qcloudimg.com/raw/24966332c887b7b8f3c4db3f77fc8747.png)
 
 
 ### 微信小程序客户端截图
