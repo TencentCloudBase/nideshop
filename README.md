@@ -14,29 +14,7 @@
 ```
 git clone https://github.com/tumobi/nideshop
 ```
-+ 创建数据库nideshop并导入项目根目录下的nideshop.sql
-```
-CREATE SCHEMA `nideshop` DEFAULT CHARACTER SET utf8mb4 ;
-```
-> 注意数据库字符编码为utf8mb4 
-+ 更改数据库配置
-  src/common/config/database.js
-  
-```
-const mysql = require('think-model-mysql');
-
-module.exports = {
-    handle: mysql,
-    database: 'nideshop',
-    prefix: 'nideshop_',
-    encoding: 'utf8mb4',
-    host: '127.0.0.1',
-    port: '3306',
-    user: 'root',
-    password: '你的密码',
-    dateStrings: true
-};
-```
++ 默认使用了 sqlite3 数据库，无需进行数据库配置。
 
 + 填写微信登录和微信支付配置
 src/common/config/config.js
