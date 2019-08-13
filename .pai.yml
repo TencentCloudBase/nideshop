@@ -3,8 +3,8 @@ deployScripts:
     - npm install --unsafe-perm=true --allow-root
     - npm run compile
     - pm2 start ./pm2.json
-  stop:
-    - pm2 stop nideshop
+  delete:
+    - pm2 delete nideshop
   restart:
     - npm install --unsafe-perm=true --allow-root
     - npm run compile
